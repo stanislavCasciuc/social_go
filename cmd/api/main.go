@@ -11,8 +11,11 @@ import (
 )
 
 var (
-	addr         = env.EnvString("ADDR", ":8080")
-	dbAddr       = env.EnvString("DB_ADDR", "postgres://postgres:postgres@localhost:5432/social?sslmode=disable")
+	addr   = env.EnvString("ADDR", ":8080")
+	dbAddr = env.EnvString(
+		"DB_ADDR",
+		"postgres://postgres:postgres@localhost:5432/social?sslmode=disable",
+	)
 	maxOpenConns = env.EnvInt("MAX_OPEN_CONNS", 30)
 	maxIdleConns = env.EnvInt("MAX_IDLE_CONNS", 30)
 	maxIdleTime  = env.EnvString("MAX_IDLE_TIME", "15m")

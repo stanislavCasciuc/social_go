@@ -41,6 +41,25 @@ func (a *application) mount() http.Handler {
 
 	r.Route("/v1", func(r chi.Router) {
 		r.Get("/health", a.heathCheckHandler)
+
+		r.Route("/posts", func(r chi.Router) {
+			r.Post("/", a.createPostHandler)
+			r.Route("/{postID}", func(r chi.Router) {
+				r.Use(a.postsContextMiddleware)
+				r.Get("/", a.getPostHandler)
+				r.Patch("/", a.updatePostHandler)
+				r.Delete("/", a.deletePostHandler)
+			})
+		})
+		r.Route("/users", func(r chi.Router) {
+			r.Route("/{userID}", func(r chi.Router) {
+				r.Use(a.userContextMiddleware)
+				r.Get("/", a.getUserHandler)
+
+				r.Put("/follow", a.followUserHandler)
+				r.Put("/unfollow", a.unfollowUserHandler)
+			})
+		})
 	})
 
 	return r
