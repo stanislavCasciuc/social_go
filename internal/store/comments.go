@@ -6,12 +6,12 @@ import (
 )
 
 type Comment struct {
-	ID        int64  `json:"id"`
-	PostID    int64  `json:"post_id"`
-	UserID    int64  `json:"user_id"`
-	Content   string `json:"content"`
-	CreatedAt string `json:"created_at"`
-	User      User   `json:"user"`
+	ID        int64  `json:"id"         yaml:"id"`
+	PostID    int64  `json:"post_id"    yaml:"post_id"`
+	UserID    int64  `json:"user_id"    yaml:"user_id"`
+	Content   string `json:"content"    yaml:"content"`
+	CreatedAt string `json:"created_at" yaml:"created_at"`
+	User      User   `json:"user"       yaml:"user"`
 }
 
 type CommentStore struct {

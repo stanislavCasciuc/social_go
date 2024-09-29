@@ -21,7 +21,6 @@ type CreatePostPayload struct {
 	Tags    []string `json:"tags"`
 }
 
-// createPostHandler method
 func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request) {
 	var payload CreatePostPayload
 	if err := readJSON(w, r, &payload); err != nil {

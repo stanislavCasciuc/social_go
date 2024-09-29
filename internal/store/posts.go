@@ -9,15 +9,21 @@ import (
 )
 
 type Post struct {
-	ID        int64     `json:"id"`
-	Content   string    `json:"content"`
-	Title     string    `json:"title"`
-	UserID    int64     `json:"user_id"`
-	Tags      []string  `json:"tags"`
-	CreatedAt string    `json:"created_at"`
-	UpdatedAt string    `json:"updated_at"`
-	Comments  []Comment `json:"comments"`
-	Version   int       `json:"version"`
+	ID        int64     `json:"id"         yaml:"id"`
+	Content   string    `json:"content"    yaml:"content"`
+	Title     string    `json:"title"      yaml:"title"`
+	UserID    int64     `json:"user_id"    yaml:"user_id"`
+	Tags      []string  `json:"tags"       yaml:"tags"`
+	CreatedAt string    `json:"created_at" yaml:"created_at"`
+	UpdatedAt string    `json:"updated_at" yaml:"updated_at"`
+	Comments  []Comment `json:"comments"   yaml:"comments"`
+	Version   int       `json:"version"    yaml:"version"`
+	User      User      `json:"user"       yaml:"user"`
+}
+
+type PostWithMetadata struct {
+	Post
+	CommentsCount int `json:"comments_count"`
 }
 
 type PostStore struct {
@@ -117,4 +123,52 @@ func (s *PostStore) UpdatePost(ctx context.Context, post *Post) error {
 		return err
 	}
 	return nil
+}
+
+func (s *PostStore) GetUserFeed(ctx context.Context, userID int64) ([]PostWithMetadata, error) {
+	query := `
+	SELECT 
+			p.id, p.user_id, p.title, p.content, p.created_at, p.version, p.tags,
+			u.username,
+			COUNT(c.id) AS comments_count
+		FROM posts p
+		LEFT JOIN comments c ON c.post_id = p.id
+		LEFT JOIN users u ON p.user_id = u.id
+		JOIN followers f ON f.follower_id = p.user_id OR p.user_id = $1
+		WHERE 
+			f.user_id = $1 OR p.user_id =$1 
+		GROUP BY p.id, u.username
+		ORDER BY p.created_at DESC	
+	`
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	rows, err := s.db.QueryContext(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var feed []PostWithMetadata
+	for rows.Next() {
+		var p PostWithMetadata
+		err = rows.Scan(
+			&p.ID,
+			&p.UserID,
+			&p.Title,
+			&p.Content,
+			&p.CreatedAt,
+			&p.Version,
+			pq.Array(&p.Tags),
+			&p.User.UserName,
+			&p.CommentsCount,
+		)
+		if err != nil {
+			return nil, err
+		}
+		feed = append(feed, p)
+	}
+
+	return feed, nil
 }

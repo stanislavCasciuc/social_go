@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -40,6 +41,10 @@ func (app *application) followUserHandler(w http.ResponseWriter, r *http.Request
 
 	err = app.store.Followers.Follow(r.Context(), userID, payload.UserID)
 	if err != nil {
+		if errors.Is(err, store.ErrConflict) {
+			app.conflictError(w, r, err)
+			return
+		}
 		app.internalServerError(w, r, err)
 		return
 	}
@@ -62,6 +67,10 @@ func (app *application) unfollowUserHandler(w http.ResponseWriter, r *http.Reque
 
 	err = app.store.Followers.Unfollow(r.Context(), userID, payload.UserID)
 	if err != nil {
+		if errors.Is(err, store.ErrConflict) {
+			app.conflictError(w, r, err)
+			return
+		}
 		app.internalServerError(w, r, err)
 		return
 	}
