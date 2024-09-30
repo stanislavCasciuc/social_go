@@ -3,7 +3,10 @@ MIGRATION_PATH = ./cmd/migrate/migrations
 
 build:
 	@go build -o bin/social cmd/api/*.go
-run: build
+
+gen-docs:
+	@swag init -g ./api/main.go -d cmd,internal && swag fmt
+run: gen-docs build
 	@./bin/social
 migration:
 	@migrate create -seq -ext sql -dir $(MIGRATION_PATH) $(filter-out $@,$(MAKECMDGOALS))

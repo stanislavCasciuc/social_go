@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"log"
 
 	"github.com/lib/pq"
 )
@@ -130,6 +131,7 @@ func (s *PostStore) GetUserFeed(
 	userID int64,
 	fq PaginatedFeedQuery,
 ) ([]PostWithMetadata, error) {
+	log.Println(fq.Sort)
 	query := `
 		SELECT 
 			p.id, p.user_id, p.title, p.content, p.created_at, p.version, p.tags,
@@ -142,8 +144,8 @@ func (s *PostStore) GetUserFeed(
 		WHERE 
 			f.follower_id = $1 AND (p.title ILIKE '%' || $4 || '%' OR p.content ILIKE '%' || $4 || '%') AND (p.tags @> $5 OR $5 = '{}')
 		GROUP BY p.id, u.username
-		ORDER BY p.created_at ` + fq.Sort + `
-    LIMIT $2 OFFSET $3
+		ORDER BY p.created_at ` + fq.Sort + ` 
+		LIMIT $2 OFFSET $3
 	`
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
